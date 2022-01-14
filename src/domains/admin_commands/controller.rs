@@ -29,7 +29,7 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
             }
             None => "Используйте эту команду в ответ на сообщение!".to_string(),
         };
-        lib::tg_helpers::send_message(cx, msg_text)
+        lib::tg_helpers::reply_to(cx, msg_text)
             .await
             .map_err(lib::errors::AdminCommandsControllerError::Report)
     }
@@ -76,7 +76,7 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
             None => "Используйте эту команду в ответ на сообщение!".to_string(),
         };
 
-        lib::tg_helpers::send_message(cx, msg_text)
+        lib::tg_helpers::reply_to(cx, msg_text)
             .await
             .map_err(lib::errors::AdminCommandsControllerError::MuteUser)
     }
@@ -110,7 +110,7 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
             }
             None => "Используйте эту команду в ответ на сообщение!".to_string(),
         };
-        lib::tg_helpers::send_message(cx, msg_text)
+        lib::tg_helpers::reply_to(cx, msg_text)
             .await
             .map_err(lib::errors::AdminCommandsControllerError::BanUser)
     }

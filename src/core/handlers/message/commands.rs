@@ -14,7 +14,7 @@ pub async fn admin_commands_handler(
 
     match result {
         ["!help"] => {
-            return lib::tg_helpers::send_message(
+            return lib::tg_helpers::reply_to(
                 cx, "\
 <b>Основные команды:</b>
 <code>!help</code> – вывести данное сообщение

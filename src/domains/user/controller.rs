@@ -71,7 +71,7 @@ impl UserController for UserControllerImpl {
                 user.rating_amount
             ));
         }
-        lib::tg_helpers::send_message(cx, text)
+        lib::tg_helpers::reply_to(cx, text)
             .await
             .map_err(lib::errors::UserError::FetchRatingTop)
     }
@@ -93,7 +93,7 @@ impl UserController for UserControllerImpl {
             user.full_name(),
             rating,
         );
-        lib::tg_helpers::send_message(cx, text)
+        lib::tg_helpers::reply_to(cx, text)
             .await
             .map_err(lib::errors::UserError::GetInfo)
     }
@@ -116,7 +116,7 @@ impl UserController for UserControllerImpl {
             .await;
 
         if let Err(_) = user_initiated_rating_result {
-            return lib::tg_helpers::send_message(cx, "Невозможно изменить рейтинг".to_string())
+            return lib::tg_helpers::reply_to(cx, "Невозможно изменить рейтинг".to_string())
                 .await
                 .map_err(lib::errors::UserError::InsertRating);
         }
@@ -124,7 +124,7 @@ impl UserController for UserControllerImpl {
         let rating_to_apply_result = rating_trigger
             .valid_amount(user_initiated_rating_result.unwrap());
         if let Err(err) = rating_to_apply_result {
-            return lib::tg_helpers::send_message(cx, err)
+            return lib::tg_helpers::reply_to(cx, err)
                 .await
                 .map_err(lib::errors::UserError::InsertRating);
         }
@@ -145,7 +145,7 @@ impl UserController for UserControllerImpl {
                 lib::errors::UserError::RepeatingRequestDuringCooldown(msg) => msg.clone(),
                 _ => "Невозможно изменить рейтинг".to_string()
             };
-            return lib::tg_helpers::send_message(cx, text)
+            return lib::tg_helpers::reply_to(cx, text)
                 .await
                 .map_err(lib::errors::UserError::InsertRating);
         }

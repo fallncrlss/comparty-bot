@@ -2,7 +2,7 @@ use crate::lib::enums::RatingCountSwitch;
 use crate::lib::types::MessageContext;
 use crate::{domains::chat::{model, service::ChatService}, lib};
 use async_trait::async_trait;
-use crate::lib::tg_helpers::send_message;
+use crate::lib::tg_helpers::reply_to;
 
 #[async_trait]
 pub trait ChatController: Send + Sync {
@@ -73,7 +73,7 @@ impl ChatController for ChatControllerImpl {
             Err(_) => "Невозможно изменить настройки чата"
         }.to_string();
 
-        send_message(cx, msg_text)
+        reply_to(cx, msg_text)
             .await
             .map_err(lib::errors::AdminCommandsControllerError::ChangeSettings)
     }

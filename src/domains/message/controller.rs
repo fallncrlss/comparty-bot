@@ -32,6 +32,11 @@ impl MessageController for MessageControllerImpl {
 
         if let Ok(link) = lib::helpers::check_link_in_text(text) {
             cx.requester
+                .delete_message(chat_id, cx.update.id)
+                .await
+                .map_err(|err| err.into())
+                .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
+            cx.requester
                 .kick_chat_member(chat_id, sender.id)
                 .await
                 .map_err(|err| err.into())
@@ -86,11 +91,11 @@ impl MessageController for MessageControllerImpl {
                 })
                 .map_err(|err| err.into())
                 .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
-            lib::tg_helpers::send_message(
+            lib::tg_helpers::reply_to(
                 cx,
                 format!(
                     "Пользователь {} был забанен за запрещённое имя пользователя.",
-                    teloxide::utils::html::user_mention_or_link(sender),
+                    teloxide::utils::html::user_mention_or_link(new_member),
                 )
             )
                 .await
