@@ -1,0 +1,1 @@
+UPDATE chat_settings SET is_rating_count = $2 WHERE chat_settings.chat_id = $1

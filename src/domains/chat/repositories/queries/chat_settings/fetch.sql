@@ -1,0 +1,1 @@
+SELECT * FROM chat_settings WHERE chat_settings.chat_id = $1;

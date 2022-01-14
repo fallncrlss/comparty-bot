@@ -1,0 +1,180 @@
+{
+  "db": "PostgreSQL",
+  "21839e2fc5615132e5a90ce5a638c6b3d03f186df6748a2347ad27671ab66a80": {
+    "query": "SELECT CONCAT(first_name, last_name) AS \"full_name!\", COALESCE(SUM(rating.amount), 0.00) AS \"rating_amount!\"\nFROM rating\nINNER JOIN \"user\" ON \"user\".telegram_id = rating.user_tg_id\nWHERE rating.chat_id = $1\ngroup by \"user\".user_id, \"user\".first_name, \"user\".last_name\nORDER BY \"rating_amount!\" DESC\nLIMIT $2;",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "full_name!",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 1,
+          "name": "rating_amount!",
+          "type_info": "Numeric"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        null,
+        null
+      ]
+    }
+  },
+  "2adc84f37714066e832c8e6b547097ac9be2e88bcec635200a2609fff07ed711": {
+    "query": "SELECT ROUND(CAST(COALESCE(SUM(amount), 0.00) as numeric), 2) AS \"amount!\" FROM rating\nINNER JOIN \"user\" u ON u.telegram_id = rating.user_tg_id\nWHERE u.telegram_id = $1 AND chat_id = $2;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "amount!",
+          "type_info": "Numeric"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": [
+        null
+      ]
+    }
+  },
+  "412ce8e6785ae763aec6e9ca6763d8a4a07eaaff7878fefc855612a20e1ed35e": {
+    "query": "INSERT INTO chat(chat_id, title)\nVALUES ($1, $2)\nON CONFLICT (chat_id) DO UPDATE\nSET title = $2\nWHERE chat.title != $2;",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "4b729a80b085c63e1a4ded6adaf5d6901b105213fdaf120cf3ce1f748968d465": {
+    "query": "UPDATE chat SET chat_id = $2 WHERE chat.chat_id = $1;",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "65c6a6217b9e7da424f83fc03edd0da32e0e9463e1e5dd28d72d7008d15ee4fa": {
+    "query": "SELECT * FROM chat_settings WHERE chat_settings.chat_id = $1;",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "chat_id",
+          "type_info": "Int8"
+        },
+        {
+          "ordinal": 1,
+          "name": "is_rating_count",
+          "type_info": "Bool"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false,
+        false
+      ]
+    }
+  },
+  "97749238e2b270ae94e2c36e9e3aad23f5364ce725df31c616ca1b89912be7c6": {
+    "query": "DELETE FROM rating WHERE rating_id = $1;",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "a65b0d11ac3e60a5e949c6492223bcf60cc87c90581f44082d8fceafc7de6927": {
+    "query": "INSERT INTO chat_settings(chat_id, is_rating_count) VALUES ($1, $2) ON CONFLICT DO NOTHING;",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Bool"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "b6eea4ba1c0034b6f837fd34f5beff5fe14c3b7f7a0563f3ae32d3da7d192ec7": {
+    "query": "INSERT INTO \"user\"(telegram_id, username, first_name, last_name)\nVALUES ($1, $2, $3, $4)\nON CONFLICT (telegram_id)\nDO UPDATE\nSET username = $2, first_name = $3, last_name = $4\nWHERE \"user\".username != $2 OR \"user\".first_name != $3 OR \"user\".last_name != $4;",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Varchar",
+          "Varchar",
+          "Varchar"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "bcf74a12ce0def42c87102c1f8607a92286fe42368f8af0043f8359a53efa308": {
+    "query": "UPDATE chat_settings SET is_rating_count = $2 WHERE chat_settings.chat_id = $1",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Bool"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "d0825fd3f4fa02c9e23ef1205b2fde1b5f566be56ebc303f0c86f7903865a296": {
+    "query": "INSERT INTO rating (user_tg_id, by_user_tg_id, chat_id, amount, comment) VALUES ($1, $2, $3, $4, $5) RETURNING rating_id;\n",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "rating_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8",
+          "Numeric",
+          "Text"
+        ]
+      },
+      "nullable": [
+        false
+      ]
+    }
+  }
+}
