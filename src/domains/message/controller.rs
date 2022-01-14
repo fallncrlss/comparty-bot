@@ -36,7 +36,15 @@ impl MessageController for MessageControllerImpl {
                 .await
                 .map_err(|err| err.into())
                 .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
-
+            lib::tg_helpers::send_message(
+                cx,
+                format!(
+                    "Пользователь {} был забанен за запрещённую ссылку в сообщении.",
+                    teloxide::utils::html::user_mention_or_link(sender),
+                )
+            )
+                .await
+                .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
             log::info!("Found the prohibited link: {}!", link);
             log::info!("Ban user {} from chat {}.", sender.full_name(), chat_id);
         }
@@ -78,7 +86,15 @@ impl MessageController for MessageControllerImpl {
                 })
                 .map_err(|err| err.into())
                 .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
-
+            lib::tg_helpers::send_message(
+                cx,
+                format!(
+                    "Пользователь {} был забанен за запрещённое имя пользователя.",
+                    teloxide::utils::html::user_mention_or_link(sender),
+                )
+            )
+                .await
+                .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
         }
 
         Ok(())
