@@ -11,7 +11,7 @@ services:
       - redis
       - postgres
     env_file:
-      - .env
+      - example.env
     networks:
       - backend
 
@@ -19,10 +19,8 @@ services:
     image: postgres:14-bullseye
     restart: on-failure
     hostname: postgres
-    environment:
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=postgres
-      - POSTGRES_USER=postgres
+    env_file:
+      - example.env
     volumes:
       - $PWD/pg-data:/app/pg-data/
     ports:
