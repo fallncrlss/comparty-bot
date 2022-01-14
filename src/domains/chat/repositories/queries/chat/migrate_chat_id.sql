@@ -1,0 +1,1 @@
+UPDATE chat SET chat_id = $2 WHERE chat.chat_id = $1;

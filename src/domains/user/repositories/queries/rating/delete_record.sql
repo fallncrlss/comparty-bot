@@ -1,0 +1,1 @@
+DELETE FROM rating WHERE rating_id = $1;

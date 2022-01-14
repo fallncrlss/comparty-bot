@@ -1,0 +1,1 @@
+INSERT INTO chat_settings(chat_id, is_rating_count) VALUES ($1, $2) ON CONFLICT DO NOTHING;

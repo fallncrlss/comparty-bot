@@ -1,0 +1,27 @@
+[package]
+name = "comparty-bot"
+version = "0.1.0"
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+teloxide = { version = "0.5.3", features = ["macros", "auto-send"] }
+log = "0.4"
+pretty_env_logger = "0.4.0"
+tokio = { version = "1.15.0", features = ["full"] }
+tokio-stream = "0.1.8"
+regex = "1.5.4"
+chrono = "0.4.19"
+reqwest = { version = "0.11", features = ["json"] }
+serde = "1.0.130"
+openssl = "*"
+openssl-sys = "0.9.72"
+sqlx = { version = "0.5.9", features = ["postgres", "runtime-tokio-native-tls", "chrono", "uuid", "bigdecimal", "offline"] }
+async-trait = "0.1.52"
+itertools = "0.10.3"
+libmath = "0.1.4"
+futures = "0.3.19"
+redis = { version = "0.21.5", features = ["tokio-comp"] }
+thiserror = "1.0.30"
+anyhow = "1.0.52"
