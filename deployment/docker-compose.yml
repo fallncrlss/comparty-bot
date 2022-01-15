@@ -11,7 +11,7 @@ services:
       - redis
       - postgres
     env_file:
-      - example.env
+      - .env
     networks:
       - backend
 
@@ -20,7 +20,7 @@ services:
     restart: on-failure
     hostname: postgres
     env_file:
-      - example.env
+      - .env
     volumes:
       - $PWD/pg-data:/app/pg-data/
     ports:
