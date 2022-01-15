@@ -22,12 +22,11 @@ services:
     env_file:
       - .env
     volumes:
-      - $PWD/pg-data:/app/pg-data/
+      - "pg-data:/var/lib/postgresql/data"
     ports:
       - "5432:5432"
     networks:
       - backend
-
   redis:
     image: redis:bullseye
     restart: unless-stopped
@@ -39,3 +38,6 @@ services:
 
 networks:
   backend:
+
+volumes:
+  pg-data:
