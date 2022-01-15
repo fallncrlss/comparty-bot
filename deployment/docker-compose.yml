@@ -6,7 +6,7 @@ services:
       context: ../
       dockerfile: ./deployment/Dockerfile
     entrypoint: ["./wait-for-it.sh", "postgres:5432", "--", "./comparty-bot"]
-    restart: on-failure
+    restart: always
     depends_on:
       - redis
       - postgres
@@ -17,7 +17,7 @@ services:
 
   postgres:
     image: postgres:14-bullseye
-    restart: on-failure
+    restart: always
     hostname: postgres
     env_file:
       - .env
@@ -29,7 +29,7 @@ services:
       - backend
   redis:
     image: redis:bullseye
-    restart: unless-stopped
+    restart: always
     hostname: redis
     ports:
       - "6379:6379"
