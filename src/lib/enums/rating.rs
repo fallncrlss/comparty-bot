@@ -51,7 +51,7 @@ impl RatingTriggers {
                         let decimal_amount = sqlx::types::BigDecimal::try_from(*amount).unwrap();
                         if user_rating_power < decimal_amount {
                             return Err(format!(
-                                "У вас недостаточное количество рейтинга для данной операции (максимум: {})",
+                                "У вас недостаточное количество рейтинга для данной операции (максимум: {:.2})",
                                 user_rating_power
                             ));
                         }
