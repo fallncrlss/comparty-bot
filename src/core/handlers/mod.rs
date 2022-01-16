@@ -8,8 +8,8 @@ pub async fn message_handler(
 ) -> Result<(), anyhow::Error> {
     if cx.update.chat.is_group() || cx.update.chat.is_supergroup() {
         if cx.update.text().is_some() {
-            message::user_init_handler(cx, &domain_holder).await?;
             message::chat_init_handler(cx, &domain_holder).await?;
+            message::user_init_handler(cx, &domain_holder).await?;
             message::admin_commands_handler(cx, &domain_holder).await?;
             message::user_commands_handler(cx, &domain_holder).await?;
             message::link_free_text_handler(cx, &domain_holder).await?;

@@ -1,10 +1,16 @@
 use sqlx;
 
+#[derive(Clone)]
 pub struct UserRequest {
     pub telegram_id: i64,
     pub username: Option<String>,
     pub first_name: String,
     pub last_name: Option<String>,
+}
+
+pub struct ChatUserRequest {
+    pub user_id: sqlx::types::Uuid,
+    pub chat_id: i64,
 }
 
 #[derive(Debug)]
@@ -21,7 +27,7 @@ pub struct TopUsersResponse {
 #[derive(Debug)]
 pub struct RatingRequest {
     pub user_tg_id: i64,
-    pub by_user_tg_id: i64,
+    pub by_user_tg_id: Option<i64>,
     pub chat_id: i64,
     pub comment: Option<String>,
     pub amount: sqlx::types::BigDecimal,

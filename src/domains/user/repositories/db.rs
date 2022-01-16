@@ -7,8 +7,9 @@ use crate::lib::errors::DBError;
 
 #[async_trait]
 pub trait UserDBRepository: Send + Sync {
+    async fn fetch_user_id(&self, telegram_id: i64) -> Result<sqlx::types::Uuid, DBError>;
     async fn create(&self, body: &model::UserRequest) -> Result<bool, DBError>;
-
+    async fn create_chat_user(&self, body: model::ChatUserRequest) -> Result<bool, DBError>;
     async fn fetch_rating(
         &self,
         body: model::UserRatingRequest,
@@ -33,6 +34,18 @@ struct PgUserDBRepositoryImpl {
 
 #[async_trait]
 impl UserDBRepository for PgUserDBRepositoryImpl {
+    async fn fetch_user_id(&self, telegram_id: i64) -> Result<sqlx::types::Uuid, DBError> {
+        sqlx::query_file_scalar!(
+            "src/domains/user/repositories/queries/user/fetch_user_id.sql",
+            telegram_id,
+        )
+            .fetch_one(&*self.pool)
+            .await
+            .map_err(anyhow::Error::new)
+            .context("Failed to fetch user id in Postgres")
+            .map_err(DBError::Execute)
+    }
+
     async fn create(&self, body: &model::UserRequest) -> Result<bool, DBError> {
         sqlx::query_file!(
             "src/domains/user/repositories/queries/user/create.sql",
@@ -46,6 +59,20 @@ impl UserDBRepository for PgUserDBRepositoryImpl {
             .map(|r| r.rows_affected().gt(&0))
             .map_err(anyhow::Error::new)
             .context("Failed to create user in Postgres")
+            .map_err(DBError::Execute)
+    }
+
+    async fn create_chat_user(&self, body: model::ChatUserRequest) -> Result<bool, DBError> {
+        sqlx::query_file!(
+            "src/domains/user/repositories/queries/chat_user/create.sql",
+            body.user_id,
+            body.chat_id,
+        )
+            .execute(&*self.pool)
+            .await
+            .map(|r| r.rows_affected().gt(&0))
+            .map_err(anyhow::Error::new)
+            .context("Failed to create chat user in Postgres")
             .map_err(DBError::Execute)
     }
 

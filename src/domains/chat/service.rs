@@ -73,6 +73,9 @@ impl ChatService for ChatServiceImpl {
         self.repo
             .migrate_chat(from, to)
             .await
+            .map(|_| {
+                log::info!("Successfully migrated chat (from id: {}, to id: {})", from, to)
+            })
             .map_err(|err| err.into())
             .map_err(lib::errors::ChatError::MigrateChat)
     }

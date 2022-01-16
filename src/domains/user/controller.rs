@@ -30,24 +30,24 @@ struct UserControllerImpl {
 #[async_trait]
 impl UserController for UserControllerImpl {
     async fn create_if_not_exists(&self, user: &teloxide::types::User, chat_id: i64) -> Result<(), lib::errors::UserError> {
-        let changed = self
+        let created = self
             .service
             .create_if_not_exists(model::UserRequest {
                 telegram_id: user.id,
                 username: user.username.clone(),
                 first_name: user.first_name.clone(),
                 last_name: user.last_name.clone(),
-            })
+            }, chat_id)
             .await?;
-        if changed {
+        if created {
             return self.service
                 .create_rating_record(model::RatingRequest {
                     chat_id,
                     user_tg_id: user.id,
-                    by_user_tg_id: user.id, // TODO
+                    by_user_tg_id: Option::None,
                     amount: sqlx::types::BigDecimal::from(lib::config::BASE_RATING),
                     comment: Option::from("Default create record.".to_string()),
-                })
+                }, chat_id)
                 .await
                 .map(|_| ());
         }
@@ -135,10 +135,10 @@ impl UserController for UserControllerImpl {
             .create_rating_record(model::RatingRequest {
                 chat_id,
                 user_tg_id: user_to_apply.id,
-                by_user_tg_id: user_initiated.id,
+                by_user_tg_id: Option::from(user_initiated.id),
                 amount: rating_to_apply.clone(),
                 comment: Option::from("".to_string()),
-            })
+            }, chat_id)
             .await;
         if let Err(ref err) = rating_record_result {
             let text = match err {

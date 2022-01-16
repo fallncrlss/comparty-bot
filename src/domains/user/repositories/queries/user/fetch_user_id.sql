@@ -1,0 +1,1 @@
+SELECT u.user_id FROM "user" u WHERE u.telegram_id = $1;

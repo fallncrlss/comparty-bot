@@ -1,0 +1,1 @@
+INSERT INTO chat_user(user_id, chat_id) VALUES ($1, $2) ON CONFLICT DO NOTHING;
