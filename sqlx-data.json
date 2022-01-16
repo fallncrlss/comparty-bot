@@ -1,34 +1,7 @@
 {
   "db": "PostgreSQL",
-  "21839e2fc5615132e5a90ce5a638c6b3d03f186df6748a2347ad27671ab66a80": {
-    "query": "SELECT CONCAT(first_name, last_name) AS \"full_name!\", COALESCE(SUM(rating.amount), 0.00) AS \"rating_amount!\"\nFROM rating\nINNER JOIN \"user\" ON \"user\".telegram_id = rating.user_tg_id\nWHERE rating.chat_id = $1\ngroup by \"user\".user_id, \"user\".first_name, \"user\".last_name\nORDER BY \"rating_amount!\" DESC\nLIMIT $2;",
-    "describe": {
-      "columns": [
-        {
-          "ordinal": 0,
-          "name": "full_name!",
-          "type_info": "Text"
-        },
-        {
-          "ordinal": 1,
-          "name": "rating_amount!",
-          "type_info": "Numeric"
-        }
-      ],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Int8"
-        ]
-      },
-      "nullable": [
-        null,
-        null
-      ]
-    }
-  },
-  "2adc84f37714066e832c8e6b547097ac9be2e88bcec635200a2609fff07ed711": {
-    "query": "SELECT ROUND(CAST(COALESCE(SUM(amount), 0.00) as numeric), 2) AS \"amount!\" FROM rating\nINNER JOIN \"user\" u ON u.telegram_id = rating.user_tg_id\nWHERE u.telegram_id = $1 AND chat_id = $2;\n",
+  "0e92a82e7917f9374acd29a75341192154017e3d8ad17ab1cc9957b246f6b1ee": {
+    "query": "SELECT ROUND(CAST(COALESCE(SUM(amount), 0.00) as numeric), 2) AS \"amount!\" FROM rating r\nINNER JOIN chat_user cu ON cu.chat_user_id = r.chat_user_id\nINNER JOIN \"user\" u ON u.user_id = cu.user_id\nWHERE u.telegram_id = $1 AND cu.chat_id = $2;\n",
     "describe": {
       "columns": [
         {
@@ -59,6 +32,26 @@
         ]
       },
       "nullable": []
+    }
+  },
+  "4b6b32f9cfaac270fa3a332f9639feca3155821d93ef9f817e3ef1076b099749": {
+    "query": "SELECT u.user_id FROM \"user\" u WHERE u.telegram_id = $1;",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "user_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8"
+        ]
+      },
+      "nullable": [
+        false
+      ]
     }
   },
   "4b729a80b085c63e1a4ded6adaf5d6901b105213fdaf120cf3ce1f748968d465": {
@@ -96,6 +89,43 @@
       },
       "nullable": [
         false,
+        false
+      ]
+    }
+  },
+  "7331d6c342bd199c10c7c1d68efc36fb4d528f05553fcb0d71dbce15989192f7": {
+    "query": "INSERT INTO chat_user(user_id, chat_id) VALUES ($1, $2) ON CONFLICT DO NOTHING;",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Uuid",
+          "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "9469c366cea1fa554dee83851dfc22184291bd8ac946139c2d7a2dc520d3a676": {
+    "query": "INSERT INTO rating(chat_user_id, by_chat_user_id, amount, comment)\nVALUES (\n        (SELECT cu.chat_user_id FROM chat_user cu INNER JOIN \"user\" u on u.user_id = cu.user_id WHERE u.telegram_id = $1 AND cu.chat_id = $3),\n        (SELECT cu.chat_user_id FROM chat_user cu INNER JOIN \"user\" u on u.user_id = cu.user_id WHERE u.telegram_id = $2 AND cu.chat_id = $3),\n        $4,\n        $5\n) RETURNING rating_id;",
+    "describe": {
+      "columns": [
+        {
+          "ordinal": 0,
+          "name": "rating_id",
+          "type_info": "Uuid"
+        }
+      ],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Int8",
+          "Int8",
+          "Numeric",
+          "Text"
+        ]
+      },
+      "nullable": [
         false
       ]
     }
@@ -153,27 +183,30 @@
       "nullable": []
     }
   },
-  "d0825fd3f4fa02c9e23ef1205b2fde1b5f566be56ebc303f0c86f7903865a296": {
-    "query": "INSERT INTO rating (user_tg_id, by_user_tg_id, chat_id, amount, comment) VALUES ($1, $2, $3, $4, $5) RETURNING rating_id;\n",
+  "f29cbe3152427900e72ae1012459e50026f8e6a637bd73d3c4ea6367d42eb832": {
+    "query": "SELECT CONCAT(first_name, last_name) AS \"full_name!\", COALESCE(SUM(r.amount), 0.00) AS \"rating_amount!\"\nFROM rating r\nINNER JOIN chat_user cu ON cu.chat_user_id = r.chat_user_id\nINNER JOIN \"user\" u ON u.user_id = cu.user_id\nWHERE cu.chat_id = $1\nGROUP BY u.user_id, u.first_name, u.last_name\nORDER BY \"rating_amount!\" DESC\nLIMIT $2;",
     "describe": {
       "columns": [
         {
           "ordinal": 0,
-          "name": "rating_id",
-          "type_info": "Uuid"
+          "name": "full_name!",
+          "type_info": "Text"
+        },
+        {
+          "ordinal": 1,
+          "name": "rating_amount!",
+          "type_info": "Numeric"
         }
       ],
       "parameters": {
         "Left": [
           "Int8",
-          "Int8",
-          "Int8",
-          "Numeric",
-          "Text"
+          "Int8"
         ]
       },
       "nullable": [
-        false
+        null,
+        null
       ]
     }
   }
