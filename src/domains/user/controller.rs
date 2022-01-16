@@ -107,6 +107,12 @@ impl UserController for UserControllerImpl {
         let user_initiated = cx.update.from().unwrap();
         let user_to_apply = cx.update.reply_to_message().unwrap().from().unwrap();
 
+        if user_initiated.id == user_to_apply.id {
+            return lib::tg_helpers::reply_to(cx, "Вы не можете изменять рейтинг самому себе".to_string())
+                .await
+                .map_err(lib::errors::UserError::InsertRating);
+        }
+
         let user_initiated_rating_result = self
             .service
             .get_rating(model::UserRatingRequest {
