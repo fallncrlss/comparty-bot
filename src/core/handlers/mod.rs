@@ -1,10 +1,11 @@
 mod callback;
 mod message;
 use crate::{injected, lib};
+use std::sync::Arc;
 
 pub async fn message_handler(
     cx: &lib::types::MessageContext,
-    domain_holder: injected::DomainHolder,
+    domain_holder: Arc<injected::DomainHolder>,
 ) -> Result<(), anyhow::Error> {
     if cx.update.chat.is_group() || cx.update.chat.is_supergroup() {
         if cx.update.text().is_some() {
@@ -29,7 +30,7 @@ pub async fn message_handler(
 
 pub async fn callback_handler(
     cx: &lib::types::CallbackContext,
-    domain_holder: injected::DomainHolder,
+    domain_holder: Arc<injected::DomainHolder>,
 ) -> Result<(), anyhow::Error> {
     callback::cancel_rating_handler(cx, &domain_holder).await?;
     Ok(())

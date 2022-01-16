@@ -13,8 +13,9 @@ pub async fn new_pg_pool() -> sqlx::PgPool {
         .to_owned();
 
     let pool = sqlx::postgres::PgPoolOptions::new()
-        .max_connections(5)
+        .max_connections(10)
         .connect_timeout(std::time::Duration::from_secs(1))
+        .idle_timeout(std::time::Duration::from_secs(10))
         .connect_with(options)
         .await
         .expect("Unable to connect to DB");
