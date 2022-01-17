@@ -80,6 +80,11 @@
           "ordinal": 1,
           "name": "is_rating_count",
           "type_info": "Bool"
+        },
+        {
+          "ordinal": 2,
+          "name": "commands_for_admin_only",
+          "type_info": "Bool"
         }
       ],
       "parameters": {
@@ -88,6 +93,7 @@
         ]
       },
       "nullable": [
+        false,
         false,
         false
       ]
@@ -101,6 +107,20 @@
         "Left": [
           "Uuid",
           "Int8"
+        ]
+      },
+      "nullable": []
+    }
+  },
+  "7338595f25569a035df9052808caf21688cb6d83637a52bc50c6caa1958614c6": {
+    "query": "UPDATE chat_settings\nSET is_rating_count = $2, commands_for_admin_only = $3\nWHERE chat_settings.chat_id = $1;",
+    "describe": {
+      "columns": [],
+      "parameters": {
+        "Left": [
+          "Int8",
+          "Bool",
+          "Bool"
         ]
       },
       "nullable": []
@@ -192,19 +212,6 @@
           "Varchar",
           "Varchar",
           "Varchar"
-        ]
-      },
-      "nullable": []
-    }
-  },
-  "bcf74a12ce0def42c87102c1f8607a92286fe42368f8af0043f8359a53efa308": {
-    "query": "UPDATE chat_settings SET is_rating_count = $2 WHERE chat_settings.chat_id = $1",
-    "describe": {
-      "columns": [],
-      "parameters": {
-        "Left": [
-          "Int8",
-          "Bool"
         ]
       },
       "nullable": []
