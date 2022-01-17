@@ -127,7 +127,7 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
             "\
 <b>Настройки чата:</b>
 Подсчёт рейтинга: <b>{}</b>
-Команды включены исключительно для админов: <b>{}</b>
+Команды доступны исключительно администраторам: <b>{}</b>
 ",
             lib::helpers::bool_to_string_switch(settings.is_rating_count),
             lib::helpers::bool_to_string_switch(settings.commands_for_admin_only),
