@@ -47,7 +47,8 @@ pub async fn rating_trigger_handler(
         .get_chat_settings(cx)
         .await
         .map_err(|err| anyhow::Error::new(err))?;
-    if !chat_settings.is_rating_count {
+
+    if !chat_settings.is_rating_count || (chat_settings.commands_for_admin_only && !lib::helpers::is_admin(&cx).await?) {
         return Ok(());
     }
 

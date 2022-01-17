@@ -62,9 +62,11 @@ impl ChatService for ChatServiceImpl {
             .map_err(lib::errors::ChatError::ChangeSettings)
             .map(|_| {
                 log::info!(
-                    "Successfully changed chat settings (id: {}, rating_count: {})",
+                    "Successfully changed chat settings \
+                    (id: {}, is_rating_count: {}, commands_for_admin_only: {})",
                     body.chat_id,
-                    body.is_rating_count
+                    body.is_rating_count,
+                    body.commands_for_admin_only,
                 )
             })
     }

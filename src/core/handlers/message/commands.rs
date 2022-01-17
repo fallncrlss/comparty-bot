@@ -10,10 +10,17 @@ pub async fn admin_commands_handler(
         .split_whitespace()
         .map(str::to_lowercase)
         .collect_vec();
+    let chat_id = cx.update.chat_id();
     let result = &lowercased_vec.iter().map(String::as_str).collect_vec()[..];
+    let chat_settings = domain_holder
+        .chat
+        .controller
+        .get_chat_settings(cx)
+        .await
+        .map_err(|err| anyhow::Error::new(err))?;
 
     match result {
-        ["!help"] => {
+        ["!help"] if !chat_settings.commands_for_admin_only || lib::helpers::is_admin(&cx).await? => {
             return lib::tg_helpers::reply_to(
                 cx, "\
 <b>Основные команды:</b>
@@ -29,10 +36,13 @@ pub async fn admin_commands_handler(
 
 
 <b>Настройка чата:</b>
-<code>!disable_rating_count</code>  – отключить подсчёт рейтинга. По умолчанию, включён. При отключении данные не стираются
+<code>!disable_rating_count</code>  – отключить подсчёт рейтинга. При отключении данные не стираются
 
-<code>!enable_rating_count</code> – включить подсчёт рейтинга
+<code>!enable_rating_count</code> – включить подсчёт рейтинга (по умолчанию, включён)
 
+<code>!enable_commands_for_admin_only</code> – команды доступны исключительно администраторам чата
+
+<code>!disable_commands_for_admin_only</code> – команды доступны для всех участников (по умолчанию)
 
 <b>Рейтинг:</b>
 <code>!me</code> – вывести свой рейтинг
@@ -52,7 +62,7 @@ pub async fn admin_commands_handler(
             )
                 .await;
         }
-        ["!report"] => {
+        ["!report"] if !chat_settings.commands_for_admin_only => {
             domain_holder.admin_commands.controller.report(cx).await
         }
         ["!ban"] if lib::helpers::is_admin(&cx).await? => {
@@ -69,14 +79,44 @@ pub async fn admin_commands_handler(
             domain_holder
                 .chat
                 .controller
-                .change_chat_settings(cx, lib::enums::RatingCountSwitch::On)
+                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest{
+                    chat_id,
+                    is_rating_count: true,
+                    commands_for_admin_only: chat_settings.commands_for_admin_only,
+                })
                 .await
         }
         ["!disable_rating_count"] if lib::helpers::is_admin(&cx).await? => {
             domain_holder
                 .chat
                 .controller
-                .change_chat_settings(cx, lib::enums::RatingCountSwitch::Off)
+                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest {
+                    chat_id,
+                    is_rating_count: false,
+                    commands_for_admin_only: chat_settings.commands_for_admin_only,
+                })
+                .await
+        }
+        ["!enable_commands_for_admin_only"] if lib::helpers::is_admin(&cx).await? => {
+            domain_holder
+                .chat
+                .controller
+                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest{
+                    chat_id,
+                    is_rating_count: chat_settings.is_rating_count,
+                    commands_for_admin_only: true,
+                })
+                .await
+        }
+        ["!disable_commands_for_admin_only"] if lib::helpers::is_admin(&cx).await? => {
+            domain_holder
+                .chat
+                .controller
+                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest {
+                    chat_id,
+                    is_rating_count: chat_settings.is_rating_count,
+                    commands_for_admin_only: false,
+                })
                 .await
         }
         _ => {Ok(())}
@@ -96,7 +136,12 @@ pub async fn user_commands_handler(
     let result = &lowercased_vec.iter().map(String::as_str).collect_vec()[..];
 
     if let Ok(chat_settings) = domain_holder.chat.controller.get_chat_settings(cx).await {
-        if chat_settings.is_rating_count {
+        let is_admin = lib::helpers::is_admin(&cx)
+            .await
+            .map_err(lib::errors::UserError::GetInfo)?;
+
+        if (!chat_settings.commands_for_admin_only && chat_settings.is_rating_count) ||
+            (chat_settings.commands_for_admin_only && chat_settings.is_rating_count && is_admin) {
             match result {
                 ["!top"] => {
                     domain_holder

@@ -65,6 +65,7 @@ impl ChatDBRepository for PgChatDBRepositoryImpl {
             "src/domains/chat/repositories/queries/chat_settings/change.sql",
             body.chat_id,
             body.is_rating_count,
+            body.commands_for_admin_only,
         )
             .execute(&*self.pool)
             .await
