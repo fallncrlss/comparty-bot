@@ -8,10 +8,13 @@ pub async fn user_init_handler(
 ) -> Result<(), lib::errors::UserError> {
     let user = cx.update.from().unwrap();
     let chat_id = cx.update.chat_id();
+    let is_admin = lib::helpers::is_admin(cx)
+        .await
+        .map_err(lib::errors::UserError::Insert)?;
     domain_holder
         .user
         .controller
-        .create_if_not_exists(user, chat_id)
+        .create_if_not_exists(user, chat_id, is_admin)
         .await
 }
 
@@ -40,6 +43,7 @@ pub async fn rating_trigger_handler(
 ) -> Result<(), anyhow::Error> {
     let msg_text = cx.update.text().unwrap();
     let chat_id = cx.update.chat_id();
+    let is_admin = lib::helpers::is_admin(&cx).await?;
 
     let chat_settings = domain_holder
         .chat
@@ -48,7 +52,7 @@ pub async fn rating_trigger_handler(
         .await
         .map_err(anyhow::Error::new)?;
 
-    if !chat_settings.is_rating_count || (chat_settings.commands_for_admin_only && !lib::helpers::is_admin(&cx).await?) {
+    if !chat_settings.is_rating_count || (chat_settings.commands_for_admin_only && !is_admin) {
         return Ok(());
     }
 
@@ -59,7 +63,7 @@ pub async fn rating_trigger_handler(
                     domain_holder
                         .user
                         .controller
-                        .create_if_not_exists(reply_user, chat_id)
+                        .create_if_not_exists(reply_user, chat_id, is_admin)
                         .await?;
 
                     domain_holder

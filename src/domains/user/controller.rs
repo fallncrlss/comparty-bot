@@ -7,7 +7,8 @@ use teloxide::prelude::*;
 
 #[async_trait]
 pub trait UserController: Send + Sync {
-    async fn create_if_not_exists(&self, user: &teloxide::types::User, chat_id: i64) -> Result<(), lib::errors::UserError>;
+    async fn create_if_not_exists(&self, user: &teloxide::types::User, chat_id: i64, is_admin: bool)
+        -> Result<(), lib::errors::UserError>;
     async fn fetch_users_by_rating(&self, cx: &lib::types::MessageContext) -> Result<(), lib::errors::UserError>;
     async fn get_info(&self, cx: &lib::types::MessageContext) -> Result<(), lib::errors::UserError>;
     async fn create_rating_record(
@@ -29,7 +30,8 @@ struct UserControllerImpl {
 
 #[async_trait]
 impl UserController for UserControllerImpl {
-    async fn create_if_not_exists(&self, user: &teloxide::types::User, chat_id: i64) -> Result<(), lib::errors::UserError> {
+    async fn create_if_not_exists(&self, user: &teloxide::types::User, chat_id: i64, is_admin: bool)
+        -> Result<(), lib::errors::UserError> {
         let created = self
             .service
             .create_if_not_exists(model::UserRequest {
@@ -40,12 +42,16 @@ impl UserController for UserControllerImpl {
             }, chat_id)
             .await?;
         if created {
+            let base_rating = sqlx::types::BigDecimal::from(
+                if is_admin { lib::config::BASE_RATING * lib::config::BASE_RATING_ADMIN_MULTIPLIER }
+                else {lib::config::BASE_RATING}
+            );
             return self.service
                 .create_rating_record(model::RatingRequest {
                     chat_id,
                     user_tg_id: user.id,
                     by_user_tg_id: Option::None,
-                    amount: sqlx::types::BigDecimal::from(lib::config::BASE_RATING),
+                    amount: base_rating,
                     comment: Option::from("Default create record.".to_string()),
                 }, chat_id)
                 .await
