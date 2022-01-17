@@ -41,11 +41,15 @@ pub enum AdminCommandsControllerError {
     #[error("{0}")]
     Report(#[source] anyhow::Error),
     #[error("{0}")]
+    GetInfo(#[source] anyhow::Error),
+    #[error("{0}")]
     MuteUser(#[source] anyhow::Error),
     #[error("{0}")]
     BanUser(#[source] anyhow::Error),
     #[error("{0}")]
     ChangeSettings(#[source] anyhow::Error),
+    #[error("{0}")]
+    GetSettings(#[source] anyhow::Error),
 }
 
 #[derive(thiserror::Error, Debug)]

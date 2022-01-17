@@ -1,12 +1,19 @@
-use crate::{domains::admin_commands::service::AdminCommandsService, lib, Requester};
+use crate::{domains::{admin_commands::service::AdminCommandsService, chat}, lib, Requester};
 use async_trait::async_trait;
 use teloxide::payloads::RestrictChatMemberSetters;
+use crate::lib::errors::AdminCommandsControllerError;
+use crate::lib::types::MessageContext;
 
 #[async_trait]
 pub trait AdminCommandsController: Send + Sync {
     async fn report(&self, cx: &lib::types::MessageContext) -> Result<(), lib::errors::AdminCommandsControllerError>;
     async fn mute_user(&self, cx: &lib::types::MessageContext, time: &str) -> Result<(), lib::errors::AdminCommandsControllerError>;
     async fn ban_user(&self, cx: &lib::types::MessageContext) -> Result<(), lib::errors::AdminCommandsControllerError>;
+    async fn get_settings(
+        &self,
+        cx: &lib::types::MessageContext,
+        settings: chat::ChatSettings
+    ) -> Result<(), lib::errors::AdminCommandsControllerError>;
 }
 
 struct AdminCommandsControllerImpl {
@@ -113,6 +120,21 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
         lib::tg_helpers::reply_to(cx, msg_text)
             .await
             .map_err(lib::errors::AdminCommandsControllerError::BanUser)
+    }
+
+    async fn get_settings(&self, cx: &MessageContext, settings: chat::ChatSettings) -> Result<(), AdminCommandsControllerError> {
+        let text = format!(
+            "\
+<b>Настройки чата:</b>
+Подсчёт рейтинга: <b>{}</b>
+Команды включены исключительно для админов: <b>{}</b>
+",
+            lib::helpers::bool_to_string_switch(settings.is_rating_count),
+            lib::helpers::bool_to_string_switch(settings.commands_for_admin_only),
+        );
+        lib::tg_helpers::reply_to(cx, text)
+            .await
+            .map_err(lib::errors::AdminCommandsControllerError::GetSettings)
     }
 }
 

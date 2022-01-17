@@ -1,26 +1,31 @@
-use crate::{injected, lib};
+use crate::{domains, injected, lib};
 use itertools::Itertools;
 
 pub async fn admin_commands_handler(
     cx: &lib::types::MessageContext,
     domain_holder: &injected::DomainHolder,
 ) -> Result<(), anyhow::Error> {
-    let msg_text = cx.update.text().unwrap();
-    let lowercased_vec = msg_text
+    let lowercased_vec = cx.update
+        .text()
+        .unwrap()
         .split_whitespace()
         .map(str::to_lowercase)
         .collect_vec();
-    let chat_id = cx.update.chat_id();
     let result = &lowercased_vec.iter().map(String::as_str).collect_vec()[..];
+
+    let is_admin = lib::helpers::is_admin(&cx)
+        .await
+        .map_err(lib::errors::AdminCommandsControllerError::GetInfo)?;
+    let chat_id = cx.update.chat_id();
     let chat_settings = domain_holder
         .chat
         .controller
         .get_chat_settings(cx)
         .await
-        .map_err(|err| anyhow::Error::new(err))?;
+        .map_err(anyhow::Error::new)?;
 
     match result {
-        ["!help"] if !chat_settings.commands_for_admin_only || lib::helpers::is_admin(&cx).await? => {
+        ["!help"] if !chat_settings.commands_for_admin_only || is_admin => {
             return lib::tg_helpers::reply_to(
                 cx, "\
 <b>Основные команды:</b>
@@ -36,6 +41,8 @@ pub async fn admin_commands_handler(
 
 
 <b>Настройка чата:</b>
+<code>!settings</code>  – текущие настройки чата
+
 <code>!disable_rating_count</code>  – отключить подсчёт рейтинга. При отключении данные не стираются
 
 <code>!enable_rating_count</code> – включить подсчёт рейтинга (по умолчанию, включён)
@@ -60,7 +67,10 @@ pub async fn admin_commands_handler(
 - проверяет ссылки в соответствии с общими ограничениями
             ".to_string()
             )
-                .await;
+                .await
+        }
+        ["!settings"] if is_admin => {
+            domain_holder.admin_commands.controller.get_settings(cx, chat_settings).await
         }
         ["!report"] if !chat_settings.commands_for_admin_only => {
             domain_holder.admin_commands.controller.report(cx).await
@@ -75,44 +85,44 @@ pub async fn admin_commands_handler(
                 .mute_user(cx, time)
                 .await
         }
-        ["!enable_rating_count"] if lib::helpers::is_admin(&cx).await? => {
+        ["!enable_rating_count"] if is_admin => {
             domain_holder
                 .chat
                 .controller
-                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest{
+                .change_chat_settings(cx, domains::chat::ChatSettings{
                     chat_id,
                     is_rating_count: true,
                     commands_for_admin_only: chat_settings.commands_for_admin_only,
                 })
                 .await
         }
-        ["!disable_rating_count"] if lib::helpers::is_admin(&cx).await? => {
+        ["!disable_rating_count"] if is_admin => {
             domain_holder
                 .chat
                 .controller
-                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest {
+                .change_chat_settings(cx, domains::chat::ChatSettings {
                     chat_id,
                     is_rating_count: false,
                     commands_for_admin_only: chat_settings.commands_for_admin_only,
                 })
                 .await
         }
-        ["!enable_commands_for_admin_only"] if lib::helpers::is_admin(&cx).await? => {
+        ["!enable_commands_for_admin_only"] if is_admin => {
             domain_holder
                 .chat
                 .controller
-                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest{
+                .change_chat_settings(cx, domains::chat::ChatSettings{
                     chat_id,
                     is_rating_count: chat_settings.is_rating_count,
                     commands_for_admin_only: true,
                 })
                 .await
         }
-        ["!disable_commands_for_admin_only"] if lib::helpers::is_admin(&cx).await? => {
+        ["!disable_commands_for_admin_only"] if is_admin => {
             domain_holder
                 .chat
                 .controller
-                .change_chat_settings(cx, lib::models::ChatSettingsChangeRequest {
+                .change_chat_settings(cx, domains::chat::ChatSettings {
                     chat_id,
                     is_rating_count: chat_settings.is_rating_count,
                     commands_for_admin_only: false,

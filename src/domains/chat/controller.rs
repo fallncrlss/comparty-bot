@@ -9,7 +9,7 @@ pub trait ChatController: Send + Sync {
     async fn change_chat_settings(
         &self,
         cx: &lib::types::MessageContext,
-        body: lib::models::ChatSettingsChangeRequest
+        body: model::ChatSettings
     ) -> Result<(), lib::errors::AdminCommandsControllerError>;
 }
 
@@ -53,7 +53,7 @@ impl ChatController for ChatControllerImpl {
     async fn change_chat_settings(
         &self,
         cx: &lib::types::MessageContext,
-        body: lib::models::ChatSettingsChangeRequest
+        body: model::ChatSettings
     ) -> Result<(), lib::errors::AdminCommandsControllerError> {
         let result = self
             .service

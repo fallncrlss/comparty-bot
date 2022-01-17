@@ -48,3 +48,10 @@ pub fn chars_to_float(chars: &[char]) -> Option<f64> {
 pub fn get_envvar(env: &'static str) -> String {
     std::env::var(env).unwrap_or_else(|_| panic!("Cannot get the {} env variable!", env))
 }
+
+pub fn bool_to_string_switch(item: bool) -> &'static str {
+    match item {
+        true => "Включён",
+        false => "Отключён"
+    }
+}
