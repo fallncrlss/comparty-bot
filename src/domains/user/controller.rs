@@ -191,8 +191,7 @@ impl UserController for UserControllerImpl {
 
         let task = cx
             .requester
-            .edit_message_reply_markup(msg.chat.id, msg.id)
-            .reply_markup(teloxide::types::InlineKeyboardMarkup::default());
+            .delete_message(msg.chat.id, msg.id);
 
         tokio::task::spawn(async {
             tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
