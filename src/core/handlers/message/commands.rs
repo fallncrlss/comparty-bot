@@ -47,7 +47,7 @@ pub async fn admin_commands_handler(
 
 <code>!enable_rating_count</code> – включить подсчёт рейтинга (по умолчанию, включён)
 
-<code>!enable_commands_for_admin_only</code> – команды доступны исключительно администраторам чата
+<code>!enable_commands_for_admin_only</code> – команды доступны исключительно администраторам чата (за исключением команды <code>!report</code>)
 
 <code>!disable_commands_for_admin_only</code> – команды доступны для всех участников (по умолчанию)
 
@@ -72,7 +72,7 @@ pub async fn admin_commands_handler(
         ["!settings"] if is_admin => {
             domain_holder.admin_commands.controller.get_settings(cx, chat_settings).await
         }
-        ["!report"] if !chat_settings.commands_for_admin_only => {
+        ["!report"] => {
             domain_holder.admin_commands.controller.report(cx).await
         }
         ["!ban"] if lib::helpers::is_admin(&cx).await? => {
