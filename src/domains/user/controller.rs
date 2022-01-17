@@ -198,10 +198,15 @@ impl UserController for UserControllerImpl {
         let task = cx
             .requester
             .delete_message(msg.chat.id, msg.id);
+        let second_task = cx.delete_message();
 
         tokio::task::spawn(async {
             tokio::time::sleep(tokio::time::Duration::from_secs(60)).await;
-            task.await
+            task
+                .await
+                .map_err(|err| log::warn!("Delay deleting message errored: {:?}", err));
+            second_task
+                .await
                 .map_err(|err| log::warn!("Delay deleting message errored: {:?}", err));
         });
 
