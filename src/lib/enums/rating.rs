@@ -42,28 +42,29 @@ impl RatingTriggers {
     }
 
     pub fn valid_amount(&self, user_rating_amount: sqlx::types::BigDecimal) -> Result<sqlx::types::BigDecimal, String> {
-        let user_rating_power = user_rating_amount.sqrt().unwrap();
-
-        let amount = match self {
-            Self::Increase(requested_amount) | Self::Decrease(requested_amount) => {
-                match requested_amount {
-                    Some(amount) => {
-                        let decimal_amount = sqlx::types::BigDecimal::try_from(*amount).unwrap();
-                        if user_rating_power < decimal_amount {
-                            return Err(format!(
-                                "У вас недостаточное количество рейтинга для данной операции (максимум: {:.2})",
-                                user_rating_power
-                            ));
+        if let Some(user_rating_power) = user_rating_amount.sqrt() {
+            let amount = match self {
+                Self::Increase(requested_amount) | Self::Decrease(requested_amount) => {
+                    match requested_amount {
+                        Some(amount) => {
+                            let decimal_amount = sqlx::types::BigDecimal::try_from(*amount).unwrap();
+                            if user_rating_power < decimal_amount {
+                                return Err(format!(
+                                    "У вас недостаточное количество рейтинга для данной операции (максимум: {:.2})",
+                                    user_rating_power
+                                ));
+                            }
+                            decimal_amount
                         }
-                        decimal_amount
+                        None => user_rating_power,
                     }
-                    None => user_rating_power,
                 }
-            }
-        };
-        Ok(match self {
-            RatingTriggers::Increase(_) => amount,
-            RatingTriggers::Decrease(_) => amount.neg()
-        })
+            };
+            return Ok(match self {
+                RatingTriggers::Increase(_) => amount,
+                RatingTriggers::Decrease(_) => amount.neg()
+            });
+        }
+        Err(format!("Пользователь с негативным рейтингом не имеет право изменять чужой (рейтинг: {})", user_rating_amount))
     }
 }
