@@ -4,6 +4,7 @@ use std::convert::TryFrom;
 use std::ops::Neg;
 use std::str::FromStr;
 
+#[derive(Clone, Copy)]
 pub enum RatingTriggers {
     Increase(Option<f64>),
     Decrease(Option<f64>),

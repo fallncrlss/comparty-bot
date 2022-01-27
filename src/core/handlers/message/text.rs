@@ -6,15 +6,19 @@ pub async fn user_init_handler(
     cx: &lib::types::MessageContext,
     domain_holder: &injected::DomainHolder,
 ) -> Result<(), lib::errors::UserError> {
-    let user = cx.update.from().unwrap();
+    let user_to_interact = lib::tg_helpers::get_user_to_interact(
+        cx.update.from().unwrap().clone(),
+        cx.update.sender_chat()
+    );
     let chat_id = cx.update.chat_id();
     let is_admin = lib::helpers::is_admin(cx)
         .await
         .map_err(lib::errors::UserError::Insert)?;
+
     domain_holder
         .user
         .controller
-        .create_if_not_exists(user, chat_id, is_admin)
+        .create_if_not_exists(&user_to_interact, chat_id, is_admin)
         .await
 }
 
@@ -72,6 +76,20 @@ pub async fn rating_trigger_handler(
                         .create_rating_record(cx, rating_trigger)
                         .await?;
                 }
+            }
+
+            if let Some(sender_chat) = reply_msg.sender_chat() {
+                domain_holder
+                    .user
+                    .controller
+                    .create_if_not_exists(&lib::tg_helpers::get_user_as_chat(sender_chat), chat_id, is_admin)
+                    .await?;
+
+                domain_holder
+                    .user
+                    .controller
+                    .create_rating_record(cx, rating_trigger)
+                    .await?;
             }
         }
     }

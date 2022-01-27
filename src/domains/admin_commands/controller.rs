@@ -44,7 +44,10 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
     async fn mute_user(&self, cx: &lib::types::MessageContext, time: &str) -> Result<(), lib::errors::AdminCommandsControllerError> {
         let msg_text = match cx.update.reply_to_message() {
             Some(msg) => {
-                let sender = msg.from().unwrap();
+                let sender = lib::tg_helpers::get_user_to_interact(
+                    msg.from().unwrap().clone(),
+                    msg.sender_chat()
+                );
                 let restrict_time = self
                     .service
                     .get_restrict_time(time)
@@ -65,7 +68,7 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
                 match result {
                     Ok(_) => format!(
                         "Пользователь {} может только читать сообщения на протяжении <b>{}</b>.",
-                        teloxide::utils::html::user_mention_or_link(sender),
+                        teloxide::utils::html::user_mention_or_link(&sender),
                         restrict_time.to_string(),
                     ),
                     Err(error) => {
@@ -91,7 +94,10 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
     async fn ban_user(&self, cx: &lib::types::MessageContext) -> Result<(), lib::errors::AdminCommandsControllerError> {
         let msg_text = match cx.update.reply_to_message() {
             Some(msg) => {
-                let sender = msg.from().unwrap();
+                let sender = lib::tg_helpers::get_user_to_interact(
+                    msg.from().unwrap().clone(),
+                    msg.sender_chat()
+                );
                 let result = cx
                     .requester
                     .kick_chat_member(cx.update.chat_id(), sender.id)
@@ -100,7 +106,7 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
                 match result {
                     Ok(_) => format!(
                         "Пользователь {} выгнан из чата.",
-                        teloxide::utils::html::user_mention_or_link(sender)
+                        teloxide::utils::html::user_mention_or_link(&sender)
                     ),
                     Err(error) => {
                         log::error!(

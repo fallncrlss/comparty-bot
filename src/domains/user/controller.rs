@@ -83,7 +83,10 @@ impl UserController for UserControllerImpl {
     }
 
     async fn get_info(&self, cx: &lib::types::MessageContext) -> Result<(), lib::errors::UserError> {
-        let user = cx.update.from().unwrap();
+        let user = lib::tg_helpers::get_user_to_interact(
+            cx.update.from().unwrap().clone(),
+            cx.update.sender_chat()
+        );
         let rating = self
             .service
             .get_rating(model::UserRatingRequest {
@@ -110,8 +113,16 @@ impl UserController for UserControllerImpl {
         rating_trigger: lib::enums::RatingTriggers,
     ) -> Result<(), lib::errors::UserError> {
         let chat_id = cx.update.chat_id();
+        if cx.update.sender_chat().is_some() {
+            return lib::tg_helpers::reply_to(cx, "Вы не можете изменять рейтинг в качестве канала".to_string())
+                .await
+                .map_err(lib::errors::UserError::InsertRating);
+        }
         let user_initiated = cx.update.from().unwrap();
-        let user_to_apply = cx.update.reply_to_message().unwrap().from().unwrap();
+        let user_to_apply = lib::tg_helpers::get_user_to_interact(
+            cx.update.reply_to_message().unwrap().from().unwrap().clone(),
+            cx.update.reply_to_message().unwrap().sender_chat()
+        );
 
         if user_initiated.id == user_to_apply.id {
             return lib::tg_helpers::reply_to(cx, "Вы не можете изменять рейтинг самому себе".to_string())
