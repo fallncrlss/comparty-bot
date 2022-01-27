@@ -25,8 +25,7 @@ impl AdminCommandsController for AdminCommandsControllerImpl {
     async fn report(&self, cx: &lib::types::MessageContext) -> Result<(), lib::errors::AdminCommandsControllerError> {
         let msg_text = match cx.update.reply_to_message() {
             Some(_) => {
-                let admin_mentions = self.service
-                    .get_chat_administrator_mentions(cx)
+                let admin_mentions = lib::tg_helpers::get_chat_administrator_mentions(cx)
                     .await
                     .map_err(|err| err.into())
                     .map_err(lib::errors::AdminCommandsControllerError::Report)?;

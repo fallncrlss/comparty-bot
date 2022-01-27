@@ -31,8 +31,6 @@ pub enum ChatError {
 #[derive(thiserror::Error, Debug)]
 pub enum AdminCommandsError {
     #[error("{0}")]
-    GetAdminMentions(#[source] anyhow::Error),
-    #[error("{0}")]
     GetRestrictMentions(#[source] anyhow::Error),
 }
 
