@@ -30,7 +30,7 @@ pub fn check_is_full_name_clean(full_name: String) -> bool {
 
 pub fn check_link_in_text(text: &str) -> Result<String, ()> {
     let link = find_url(text).map_err(|_| {})?;
-    if lib::config::STOP_WORDS_IN_LINK.iter().any(|word| link.contains(word)) {
+    if lib::config::STOP_WORDS_IN_LINK.iter().any(|word| link.contains(word)) || link.len() <= 6 {
         return Ok(link);
     }
     Err(())

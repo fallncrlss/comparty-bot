@@ -29,15 +29,19 @@ pub async fn chat_init_handler(
     domain_holder.chat.controller.create_if_not_exists(cx).await
 }
 
-pub async fn link_free_text_handler(
+pub async fn clean_spam_handler(
     cx: &lib::types::MessageContext,
     domain_holder: &injected::DomainHolder
 ) -> Result<(), lib::errors::MessageControllerError> {
-    let msg_text = cx.update.text().unwrap();
     domain_holder
         .message
         .controller
-        .check_link_in_message(cx, msg_text)
+        .check_link_in_message(cx)
+        .await?;
+    domain_holder
+        .message
+        .controller
+        .check_author(cx)
         .await
 }
 

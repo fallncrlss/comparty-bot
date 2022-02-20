@@ -1,18 +1,19 @@
 use crate::{domains::message::service::MessageService, lib, Requester};
 use async_trait::async_trait;
 use teloxide;
+use crate::lib::errors::MessageControllerError;
+use crate::lib::types::MessageContext;
 
 #[async_trait]
 pub trait MessageController: Send + Sync {
     async fn check_link_in_message(
-        &self,
-        cx: &lib::types::MessageContext,
-        text: &str,
+        &self, cx: &lib::types::MessageContext,
     ) -> Result<(), lib::errors::MessageControllerError>;
     async fn check_new_member(
-        &self,
-        cx: &crate::lib::types::MessageContext,
-        new_member: &teloxide::types::User,
+        &self, cx: &crate::lib::types::MessageContext, new_member: &teloxide::types::User,
+    ) -> Result<(), lib::errors::MessageControllerError>;
+    async fn check_author(
+        &self, cx: &crate::lib::types::MessageContext
     ) -> Result<(), lib::errors::MessageControllerError>;
 }
 
@@ -23,12 +24,11 @@ struct MessageControllerImpl {
 #[async_trait]
 impl MessageController for MessageControllerImpl {
     async fn check_link_in_message(
-        &self,
-        cx: &lib::types::MessageContext,
-        text: &str,
+        &self, cx: &lib::types::MessageContext,
     ) -> Result<(), lib::errors::MessageControllerError> {
         let chat_id = cx.update.chat_id();
         let sender = cx.update.from().unwrap();
+        let text = cx.update.text().unwrap();
 
         if let Ok(link) = lib::helpers::check_link_in_text(text) {
             log::info!("Found the prohibited link: {}!", link);
@@ -126,33 +126,47 @@ impl MessageController for MessageControllerImpl {
                 .map_err(|err| err.into())
                 .map_err(lib::errors::MessageControllerError::CheckNewMember);
 
-            if let Err(error) = result {
-                log::warn!(
-                    "Oops, error occurred deleting the user (full name: {}, id: {}) : {:#?}",
-                    new_member.full_name(),
-                    new_member.id,
-                    error,
-                );
-                let admin_mentions = lib::tg_helpers::get_chat_administrator_mentions(cx)
-                    .await
-                    .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
-                let msg_text = "Замечен подозрительный пользователь в соответствии с CAS! \
+            match result {
+                Ok(_) => {
+                    let result = cx.requester
+                        .delete_message(chat.id, cx.update.id)
+                        .await
+                        .map_err(|err| err.into())
+                        .map_err(lib::errors::MessageControllerError::CheckLinkInMessage);
+                },
+                Err(error) => {
+                    log::warn!(
+                        "Oops, error occurred deleting the user (full name: {}, id: {}) : {:#?}",
+                        new_member.full_name(),
+                        new_member.id,
+                        error,
+                    );
+                    let admin_mentions = lib::tg_helpers::get_chat_administrator_mentions(cx)
+                        .await
+                        .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
+                    let msg_text = "Замечен подозрительный пользователь в соответствии с CAS! \
                    Администрация проинформирована и разберётся в ситуации за кратчайшие сроки."
-                    .to_owned()
-                    + &admin_mentions.join("");
-                lib::tg_helpers::reply_to(cx, msg_text)
-                    .await
-                    .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
-                return Err(error);
+                        .to_owned()
+                        + &admin_mentions.join("");
+                    lib::tg_helpers::reply_to(cx, msg_text)
+                        .await
+                        .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
+                    return Err(error);
+                }
             }
         }
+        Ok(())
+    }
 
-        if lib::helpers::check_is_full_name_clean(new_member.full_name()) {
+    async fn check_author(&self, cx: &MessageContext) -> Result<(), MessageControllerError> {
+        let chat_id = cx.update.chat_id();
+        let user = cx.update.from().unwrap();
+        if lib::helpers::check_is_full_name_clean(user.full_name()) {
             let result = cx.requester
-                .kick_chat_member(chat.id, new_member.id)
+                .kick_chat_member(chat_id, user.id)
                 .await
                 .map(|_| {
-                    log::info!("User {} (id: {}) is banned due to inappropriate full name.", new_member.full_name(), new_member.id);
+                    log::info!("User {} (id: {}) is banned due to inappropriate full name.", user.full_name(), user.id);
                 })
                 .map_err(|err| err.into())
                 .map_err(lib::errors::MessageControllerError::CheckLinkInMessage);
@@ -160,10 +174,7 @@ impl MessageController for MessageControllerImpl {
                 Ok(_) => {
                     lib::tg_helpers::reply_to(
                         cx,
-                        format!(
-                            "Пользователь {} был забанен за запрещённое имя пользователя.",
-                            teloxide::utils::html::user_mention_or_link(new_member),
-                        ),
+                        "Пользователь был забанен за запрещённое имя пользователя.".to_string(),
                     )
                         .await
                         .map_err(lib::errors::MessageControllerError::CheckLinkInMessage)?;
@@ -171,8 +182,8 @@ impl MessageController for MessageControllerImpl {
                 Err(error) => {
                     log::warn!(
                         "Oops, error occurred deleting the user (full name: {}, id: {}) : {:#?}",
-                        new_member.full_name(),
-                        new_member.id,
+                        user.full_name(),
+                        user.id,
                         error,
                     );
                     let admin_mentions = lib::tg_helpers::get_chat_administrator_mentions(cx)
@@ -189,7 +200,6 @@ impl MessageController for MessageControllerImpl {
                 }
             }
         }
-
         Ok(())
     }
 }

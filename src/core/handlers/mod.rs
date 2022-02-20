@@ -13,7 +13,7 @@ pub async fn message_handler(
             message::user_init_handler(cx, &domain_holder).await?;
             message::admin_commands_handler(cx, &domain_holder).await?;
             message::user_commands_handler(cx, &domain_holder).await?;
-            message::link_free_text_handler(cx, &domain_holder).await?;
+            message::clean_spam_handler(cx, &domain_holder).await?;
             message::rating_trigger_handler(cx, &domain_holder).await?;
         }
 
