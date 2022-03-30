@@ -28,6 +28,18 @@ pub fn check_is_full_name_clean(full_name: String) -> bool {
         .any(|word| full_name.contains(word))
 }
 
+pub fn check_is_politics_in_text(text: String) -> bool {
+    lib::config::POLITIC_WORDS
+        .iter()
+        .any(|word| text.contains(word))
+}
+
+pub fn check_is_insult_in_text(text: String) -> bool {
+    lib::config::INSULT_WORDS
+        .iter()
+        .any(|word| text.contains(word))
+}
+
 pub fn check_link_in_text(text: &str) -> Result<String, ()> {
     let link = find_url(text).map_err(|_| {})?;
     if lib::config::STOP_WORDS_IN_LINK.iter().any(|word| link.contains(word)) || link.len() <= 6 {

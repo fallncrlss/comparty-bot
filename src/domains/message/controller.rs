@@ -13,7 +13,13 @@ pub trait MessageController: Send + Sync {
         &self, cx: &crate::lib::types::MessageContext, new_member: &teloxide::types::User,
     ) -> Result<(), lib::errors::MessageControllerError>;
     async fn check_author(
-        &self, cx: &crate::lib::types::MessageContext
+        &self, cx: &crate::lib::types::MessageContext,
+    ) -> Result<(), lib::errors::MessageControllerError>;
+    async fn check_politics_in_text(
+        &self, cx: &crate::lib::types::MessageContext,
+    ) -> Result<(), lib::errors::MessageControllerError>;
+    async fn check_insult_in_text(
+        &self, cx: &crate::lib::types::MessageContext,
     ) -> Result<(), lib::errors::MessageControllerError>;
 }
 
@@ -199,6 +205,58 @@ impl MessageController for MessageControllerImpl {
                     return Err(error);
                 }
             }
+        }
+        Ok(())
+    }
+
+    async fn check_politics_in_text(&self, cx: &MessageContext) -> Result<(), MessageControllerError> {
+        let text = cx.update.text().unwrap();
+
+        if lib::helpers::check_is_politics_in_text(text.to_string()) {
+            let msg_text = "Просимо не згадувати політичні теми та не ображати людей за політичною ознакою, щоб уникнути подальшого конфлікту та агресії.
+
+Якщо це повідомлення у відповідь на образу, агресію або пропаганду – використовуйте команду !report. Якщо можливо, видаліть або відредагуйте повідомлення.
+Інакше, ви підвищуєте можливість отримати тимчасове обмеження написання повідомлень, у деяких випадках – отримання бана.
+
+Дякуємо за розуміння.
+
+
+
+Просим не упоминать политические темы и не оскорблять людей по политическому признаку во избежании дальнейшего конфликта и агрессии.
+
+Если это ответное сообщение на оскорбление, агрессию или пропаганду – используйте команду !report. По возможности, удалите или отредактируйте сообщение.
+В противном случае, вы повышаете вероятность получить временное ограничение на написание сообщений, в особых случаях – получение бана.
+
+Благодарим за понимание.
+";
+            lib::tg_helpers::reply_to(cx, msg_text.to_string())
+                .await
+                .map_err(lib::errors::MessageControllerError::SendAnswer)?;
+        }
+        Ok(())
+    }
+
+    async fn check_insult_in_text(&self, cx: &MessageContext) -> Result<(), MessageControllerError> {
+        let text = cx.update.text().unwrap();
+
+        if lib::helpers::check_is_insult_in_text(text.to_string()) {
+            let msg_text = "Просимо виявляти повагу до кожного учасника будь-ким і не використовувати образи, щоб уникнути подальшого конфлікту та агресії.
+Якщо це повідомлення у відповідь на образу, агресію або пропаганду – використовуйте команду !report та адміністрація розбереться із ситуацією. Якщо можливо, видаліть або відредагуйте повідомлення.
+Інакше, ви підвищуєте можливість отримати тимчасове обмеження написання повідомлень, у деяких випадках – отримання бана.
+
+Дякуємо за розуміння.
+
+
+
+Просим проявлять уважение к каждому участнику кем бы он ни был и не использовать оскорбления во избежании дальнейшего конфликта и агрессии.
+Если оскорбления были использованы в ответ – используйте команду !report и администрация разберётся с ситуацией. По возможности, удалите или отредактируйте сообщение.
+В противном случае, вы повышаете вероятность получить временное ограничение на написание сообщений, в особых случаях – получение бана.
+
+Благодарим за понимание.
+";
+            lib::tg_helpers::reply_to(cx, msg_text.to_string())
+                .await
+                .map_err(lib::errors::MessageControllerError::SendAnswer)?;
         }
         Ok(())
     }

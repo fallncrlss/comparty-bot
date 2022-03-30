@@ -42,6 +42,16 @@ pub async fn clean_spam_handler(
         .message
         .controller
         .check_author(cx)
+        .await?;
+    domain_holder
+        .message
+        .controller
+        .check_insult_in_text(cx)
+        .await?;
+    domain_holder
+        .message
+        .controller
+        .check_politics_in_text(cx)
         .await
 }
 

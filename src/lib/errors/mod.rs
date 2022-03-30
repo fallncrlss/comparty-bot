@@ -62,6 +62,8 @@ pub enum MessageControllerError {
     CheckLinkInMessage(#[source] anyhow::Error),
     #[error("{0}")]
     CheckNewMember(#[source] anyhow::Error),
+    #[error("{0}")]
+    SendAnswer(#[source] anyhow::Error),
 }
 
 #[derive(thiserror::Error, Debug)]
